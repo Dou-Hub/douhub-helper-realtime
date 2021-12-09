@@ -4,6 +4,10 @@
 //  The detail information can be found in the LICENSE file in the root directory of this source tree.
 
 export {
+    getToken
+} from './libs/twilio-sync-token';
+
+export {
     retrieveSyncDocument, updateSyncDocument, createSyncDocument, upsertSyncDocument
 } from './libs/twilio-sync-document';
 
