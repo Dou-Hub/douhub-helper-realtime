@@ -8,10 +8,10 @@ export {
 } from './libs/twilio-sync-token';
 
 export {
-    retrieveSyncDocument, updateSyncDocument, createSyncDocument, upsertSyncDocument
+    retrieveSyncDocument, updateSyncDocument, createSyncDocument, upsertSyncDocument, deleteSyncDocument
 } from './libs/twilio-sync-document';
 
 export {
-    retrieveSyncList, updateSyncList, createSyncList, upsertSyncList,
-    createSyncListItem, updateSyncListItem, deleteSyncListItem
+    retrieveSyncList, updateSyncList, createSyncList, upsertSyncList, deleteSyncList,
+    retrieveSyncListItem, createSyncListItem, updateSyncListItem, upsertSyncListItem, deleteSyncListItem
 } from './libs/twilio-sync-list';

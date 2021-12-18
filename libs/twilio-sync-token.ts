@@ -33,3 +33,15 @@ export const getToken = async (userId: string) => {
         token: token.toJwt()
     };
 }
+
+let twilioClientForServices:any = null;
+
+export const initClient = async () => {
+    if (!twilioClientForServices) 
+    {
+        const twilioClient = twilio(await getSecretValue('TWILIO_ACCOUNT_SID'), await getSecretValue('TWILIO_ACCOUNT_TOKEN'));
+        const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+        twilioClientForServices = twilioClient.sync.services(serviceId);
+    }
+    return twilioClientForServices;
+};

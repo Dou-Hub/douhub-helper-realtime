@@ -3,26 +3,19 @@
 //  This source code is licensed under the MIT license.
 //  The detail information can be found in the LICENSE file in the root directory of this source tree.
 
-
-import { getSecretValue} from 'douhub-helper-service';
 import {assign, isInteger} from 'lodash';
+import {initClient} from './twilio-sync-token';
 
 
-const twilio = require('twilio');
-let twilioClientForList:any = null;
+export const retrieveSyncList = async (id:string): Promise<Record<string,any>> => {
 
-const initClient = async () => {
-    if (!twilioClientForList) twilioClientForList = twilio(await getSecretValue('TWILIO_ACCOUNT_SID'), await getSecretValue('TWILIO_ACCOUNT_TOKEN'));
-};
-
-export const deleteSyncList = async (id:string) => {
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+    const twilioService = await initClient();
+    
     return new Promise((resolve, reject) => {
-        twilioClientForList.sync.services(serviceId)
+        twilioService
             .syncLists(id)
-            .remove()
-            .then((list:any) => {
+            .fetch()
+            .then((list:Record<string,any>) => {
                 resolve(list);
             })
             .catch((error:any) => {
@@ -31,17 +24,33 @@ export const deleteSyncList = async (id:string) => {
     });
 };
 
-export const createSyncList = async (data:Record<string,any>) => {
+export const deleteSyncList = async (id:string): Promise<Record<string,any>> => {
+    const twilioService = await initClient();
+    
+    return new Promise((resolve, reject) => {
+        twilioService
+            .syncLists(id)
+            .remove()
+            .then((list:Record<string,any>) => {
+                resolve(list);
+            })
+            .catch((error:any) => {
+                reject(error);
+            });
+    });
+};
 
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+export const createSyncList = async (data:Record<string,any>): Promise<Record<string,any>> => {
+
+    const twilioService = await initClient();
+    
     const list = assign({ data }, { uniqueName: data.id }, isInteger(data.ttl) && data.ttl > 0 ? { ttl: data.ttl } : {});
     
     return new Promise((resolve, reject) => {
-        twilioClientForList.sync.services(serviceId)
+        twilioService
             .syncLists
             .create(list)
-            .then((list:any) => {
+            .then((list:Record<string,any>) => {
                 resolve(list);
             })
             .catch((error:any) => {
@@ -50,37 +59,18 @@ export const createSyncList = async (data:Record<string,any>) => {
     });
 };
 
-export const retrieveSyncList = async (id:string) => {
 
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+export const updateSyncList = async (data:Record<string,any>): Promise<Record<string,any>> => {
+
+    const twilioService = await initClient();
     
-    return new Promise((resolve, reject) => {
-        twilioClientForList.sync.services(serviceId)
-            .syncLists(id)
-            .fetch()
-            .then((list:any) => {
-                resolve(list);
-            })
-            .catch((error:any) => {
-                console.log({error});
-                resolve(null);
-            });
-    });
-};
-
-export const updateSyncList = async (data:Record<string,any>) => {
-
-    await initClient();
-    
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
     const list = assign({ data }, { uniqueName: data.id }, isInteger(data.ttl) && data.ttl > 0 ? { ttl: data.ttl } : {});
    
     return new Promise((resolve, reject) => {
-        twilioClientForList.sync.services(serviceId)
+        twilioService
             .syncLists(data.id)
             .update(list)
-            .then((list:any) => {
+            .then((list:Record<string,any>) => {
                 resolve(list);
             })
             .catch((error:any) => {
@@ -89,7 +79,7 @@ export const updateSyncList = async (data:Record<string,any>) => {
     });
 };
 
-export const upsertSyncList = async (data:Record<string,any>) => {
+export const upsertSyncList = async (data:Record<string,any>): Promise<Record<string,any>> => {
 
     if (await retrieveSyncList(data.id)) {
         return await updateSyncList(data);
@@ -99,10 +89,30 @@ export const upsertSyncList = async (data:Record<string,any>) => {
     }
 };
 
-export const createSyncListItem = async (data:Record<string,any>) => {
+//Start List Item
 
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+export const retrieveSyncListItem = async (listId:string , index: number): Promise<Record<string,any>> => {
+
+    const twilioService = await initClient();
+
+    return new Promise((resolve, reject) => {
+        twilioService
+            .syncLists(listId)
+            .syncListItems(index)
+            .fetch()
+            .then((item:Record<string,any>) => {
+                resolve(item);
+            })
+            .catch((error:any) => {
+                reject(error);
+            });
+    });
+};
+
+export const createSyncListItem = async (data:Record<string,any>): Promise<Record<string,any>> => {
+
+    const twilioService = await initClient();
+    
 
     const listId = data.listId;
     if (!listId) throw 'data.listId is required.';
@@ -110,11 +120,11 @@ export const createSyncListItem = async (data:Record<string,any>) => {
     const item = assign({ data }, isInteger(data.ttl) && data.ttl > 0 ? { ttl: data.ttl } : {});
    
     return new Promise((resolve, reject) => {
-        twilioClientForList.sync.services(serviceId)
+        twilioService
             .syncLists(listId)
             .syncListItems
             .create(item)
-            .then((list:any) => {
+            .then((list:Record<string,any>) => {
                 resolve(list);
             })
             .catch((error:any) => {
@@ -123,10 +133,10 @@ export const createSyncListItem = async (data:Record<string,any>) => {
     });
 };
 
-export const updateSyncListItem = async (data:Record<string,any>) => {
+export const updateSyncListItem = async (data:Record<string,any>): Promise<Record<string,any>> => {
 
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+    const twilioService = await initClient();
+    
     const listId = data.listId;
     if (!listId) throw 'data.listId is required.';
 
@@ -136,11 +146,11 @@ export const updateSyncListItem = async (data:Record<string,any>) => {
     const item = assign({ data }, isInteger(data.ttl) && data.ttl > 0 ? { ttl: data.ttl } : {});
  
     return new Promise((resolve, reject) => {
-        twilioClientForList.sync.services(serviceId)
+        twilioService
             .syncLists(listId)
             .syncListItems(index)
             .update(item)
-            .then((list:any) => {
+            .then((list:Record<string,any>) => {
                 resolve(list);
             })
             .catch((error:any) => {
@@ -149,10 +159,9 @@ export const updateSyncListItem = async (data:Record<string,any>) => {
     });
 };
 
-export const deleteSyncListItem = async (data:Record<string,any>) => {
+export const deleteSyncListItem = async (data:Record<string,any>): Promise<Record<string,any>> => {
 
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+    const twilioService = await initClient();
 
     const listId = data.listId;
     if (!listId) throw 'data.listId is required.';
@@ -162,11 +171,11 @@ export const deleteSyncListItem = async (data:Record<string,any>) => {
    
    
     return new Promise((resolve, reject) => {
-        twilioClientForList.sync.services(serviceId)
+        twilioService
             .syncLists(listId)
             .syncListItems(index)
             .remove()
-            .then((list:any) => {
+            .then((list:Record<string,any>) => {
                 resolve(list);
             })
             .catch((error:any) => {
@@ -174,3 +183,21 @@ export const deleteSyncListItem = async (data:Record<string,any>) => {
             });
     });
 };
+
+export const upsertSyncListItem = async (data:Record<string,any>): Promise<Record<string,any>> => {
+
+    const listId = data.listId;
+    if (!listId) throw 'data.listId is required.';
+
+    const index = data.index;
+    if (!index) throw 'data.index is required.';
+   
+
+    if (await retrieveSyncListItem(listId, index)) {
+        return await updateSyncListItem(data);
+    }
+    else {
+        return await createSyncList(data);
+    }
+};
+

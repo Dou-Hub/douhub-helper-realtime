@@ -4,24 +4,16 @@
 //  The detail information can be found in the LICENSE file in the root directory of this source tree.
 
 
-import { getSecretValue} from 'douhub-helper-service';
 import {assign, isInteger} from 'lodash';
+import {initClient} from './twilio-sync-token';
 
-const twilio = require('twilio');
-let twilioClientForDocument:any = null;
-
-const initClient = async () => {
-    if (!twilioClientForDocument) twilioClientForDocument = twilio(await getSecretValue('TWILIO_ACCOUNT_SID'), await getSecretValue('TWILIO_ACCOUNT_TOKEN'));
-};
-
-export const deleteSyncDocument = async (id:string) => {
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+export const deleteSyncDocument = async (id:string): Promise<Record<string,any>> => {
+    const twilioService = await initClient();
     return new Promise((resolve, reject) => {
-        twilioClientForDocument.sync.services(serviceId)
+        twilioService
             .documents(id)
             .remove()
-            .then((document:any) => {
+            .then((document:Record<string,any>) => {
                 resolve(document);
             })
             .catch((error:any) => {
@@ -30,17 +22,16 @@ export const deleteSyncDocument = async (id:string) => {
     });
 };
 
-export const createSyncDocument = async (data:Record<string,any>) => {
+export const createSyncDocument = async (data:Record<string,any>): Promise<Record<string,any>> => {
 
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+    const twilioService = await initClient();
     const document = assign({ data }, { uniqueName: data.id }, isInteger(data.ttl) && data.ttl > 0 ? { ttl: data.ttl } : {});
     
     return new Promise((resolve, reject) => {
-        twilioClientForDocument.sync.services(serviceId)
+        twilioService
             .documents
             .create(document)
-            .then((document:any) => {
+            .then((document:Record<string,any>) => {
                 resolve(document);
             })
             .catch((error:any) => {
@@ -49,36 +40,33 @@ export const createSyncDocument = async (data:Record<string,any>) => {
     });
 };
 
-export const retrieveSyncDocument = async (id: string) => {
+export const retrieveSyncDocument = async (id: string) : Promise<Record<string,any>> => {
 
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+    const twilioService = await initClient();
     
     return new Promise((resolve, reject) => {
-        twilioClientForDocument.sync.services(serviceId)
+        twilioService
             .documents(id)
             .fetch()
-            .then((document:any) => {
+            .then((document:Record<string,any>) => {
                 resolve(document);
             })
             .catch((error:any) => {
-                console.error({error});
-                resolve(null);
+                reject(error);
             });
     });
 };
 
-export const updateSyncDocument = async (data:Record<string,any>) => {
+export const updateSyncDocument = async (data:Record<string,any>): Promise<Record<string,any>> => {
 
-    await initClient();
-    const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
+    const twilioService = await initClient();
     const document = assign({ data }, { uniqueName: data.id }, isInteger(data.ttl) && data.ttl > 0 ? { ttl: data.ttl } : {});
    
     return new Promise((resolve, reject) => {
-        twilioClientForDocument.sync.services(serviceId)
+        twilioService
             .documents(data.id)
             .update(document)
-            .then((document:any) => {
+            .then((document:Record<string,any>) => {
                 resolve(document);
             })
             .catch((error:any) => {
@@ -87,7 +75,7 @@ export const updateSyncDocument = async (data:Record<string,any>) => {
     });
 };
 
-export const upsertSyncDocument = async (data:Record<string,any>) => {
+export const upsertSyncDocument = async (data:Record<string,any>): Promise<Record<string,any>> => {
 
     if (await retrieveSyncDocument(data.id)) {
         return await updateSyncDocument(data);
