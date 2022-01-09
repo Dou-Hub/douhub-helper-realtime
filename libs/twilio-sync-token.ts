@@ -5,6 +5,7 @@
 
 
 import { getSecretValue } from 'douhub-helper-service';
+import { _process } from 'douhub-helper-util';
 const twilio = require('twilio');
 
 export const getToken = async (userId: string) => {
@@ -34,14 +35,11 @@ export const getToken = async (userId: string) => {
     };
 }
 
-let twilioClientForServices:any = null;
-
 export const initClient = async () => {
-    if (!twilioClientForServices) 
-    {
+    if (!_process.twilioClientForServices) {
         const twilioClient = twilio(await getSecretValue('TWILIO_ACCOUNT_SID'), await getSecretValue('TWILIO_ACCOUNT_TOKEN'));
         const serviceId = await getSecretValue('TWILIO_SYNC_SERVICE_SID');
-        twilioClientForServices = twilioClient.sync.services(serviceId);
+        _process.twilioClientForServices = twilioClient.sync.services(serviceId);
     }
-    return twilioClientForServices;
+    return _process.twilioClientForServices;
 };
