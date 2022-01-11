@@ -71,7 +71,7 @@ export const updateSyncList = async (data: Record<string, any>): Promise<Record<
     const twilioService = await initClient();
 
     if (!isNonEmptyString(data.id)) throw 'The data.id is required.';
-    
+
     const list = assign({ data }, { uniqueName: data.id }, isInteger(data.ttl) && data.ttl > 0 ? { ttl: data.ttl } : {});
 
     return new Promise((resolve, reject) => {
@@ -213,5 +213,40 @@ export const upsertSyncListItem = async (data: Record<string, any>): Promise<Rec
         console.error(error);
         return await createSyncListItem(data);
     }
+};
+
+
+export const retrieveSyncListItems = async (listId: string, pageSize?: number, fromIndex?: number, order?:string): Promise<Record<string, any>> => {
+
+    const twilioService = await initClient();
+
+    if (!isNonEmptyString(listId)) throw 'The listId is required.';
+    if (!(pageSize && isInteger(pageSize) && pageSize > 0)) pageSize = 50;
+
+    const params: Record<string, any> = { limit: pageSize };
+
+    if (fromIndex && isInteger(fromIndex) && fromIndex > 0) {
+        params.from = fromIndex;
+        params.bounds = 'exclusive';
+    }
+
+    if (order && order=='desc') {
+        params.order = order;
+    }
+
+    return new Promise((resolve, reject) => {
+        twilioService
+            .syncLists(listId)
+            .syncListItems
+            .list(params)
+            .then((items: Array<Record<string, any>>) => {
+                resolve(items);
+            })
+            .catch((error: any) => {
+                reject(error);
+            });
+    });
+
+
 };
 

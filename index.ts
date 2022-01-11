@@ -13,5 +13,5 @@ export {
 
 export {
     retrieveSyncList, updateSyncList, createSyncList, upsertSyncList, deleteSyncList,
-    retrieveSyncListItem, createSyncListItem, updateSyncListItem, upsertSyncListItem, deleteSyncListItem
+    retrieveSyncListItem, retrieveSyncListItems, createSyncListItem, updateSyncListItem, upsertSyncListItem, deleteSyncListItem
 } from './libs/twilio-sync-list';
