@@ -216,7 +216,7 @@ export const upsertSyncListItem = async (data: Record<string, any>): Promise<Rec
 };
 
 
-export const retrieveSyncListItems = async (listId: string, pageSize?: number, fromIndex?: number, order?:string): Promise<Record<string, any>> => {
+export const retrieveSyncListItems = async (listId: string, pageSize?: number, fromIndex?: number, order?:string): Promise<Array<Record<string, any>>> => {
 
     const twilioService = await initClient();
 
